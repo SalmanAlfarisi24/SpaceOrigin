@@ -59,9 +59,9 @@
 
 -----
 
-## 👨‍💻 Pengembang
+## 👨‍💻 Link Game(desktop)
 
-
+https://space-origin-omega.vercel.app/
 -----
 
 ## 📜 Lisensi & Kredit
