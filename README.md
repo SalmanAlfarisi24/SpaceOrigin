@@ -46,9 +46,15 @@
     ```
 2.  **Masuk ke direktori:**
     ```bash
-    cd space-origin
+    cd namafolder/space-origin
     ```
-3.  **Jalankan dengan Live Server:**
+3.  **Jika menggunakan IDE:**
+    ```bash
+    npm install
+    npm build
+    npm run dev
+    ```
+4.  **Jalankan dengan Live Server:**
     Karena game ini memuat aset eksternal (gambar & suara), disarankan menggunakan ekstensi **Live Server** di VS Code agar fitur audio dan tekstur tidak terblokir oleh kebijakan CORS browser.
 
 -----
