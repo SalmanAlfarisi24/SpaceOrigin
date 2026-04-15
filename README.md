@@ -54,6 +54,7 @@
     npm build
     npm run dev
     ```
+    jalankan perintah satu per satu
 4.  **Jalankan dengan Live Server:**
     Karena game ini memuat aset eksternal (gambar & suara), disarankan menggunakan ekstensi **Live Server** di VS Code agar fitur audio dan tekstur tidak terblokir oleh kebijakan CORS browser.
 
