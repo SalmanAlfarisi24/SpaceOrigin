@@ -4,7 +4,7 @@
 ![Tech Stack](https://img.shields.io/badge/Made%20with-HTML5%20%7C%20CSS3%20%7C%20JavaScript-blue?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20Mobile-green?style=for-the-badge)
 
-[cite_start]**Space Origin: Galactic Strike** adalah game *2D horizontal-scrolling shoot 'em up* (shmup) bertema *sci-fi* yang dikembangkan khusus untuk kompetisi **Game Jam GDGOC UNSRI 2026**[cite: 1, 3, 5]. [cite_start]Pemain berperan sebagai pilot pesawat tempur luar aka-asa elit yang dikirim ke wilayah terpencil untuk menahan invasi armada UFO misterius yang mengancam jalur galaksi[cite: 5, 19].
+**Space Origin: Galactic Strike** adalah game *2D horizontal-scrolling shoot 'em up* (shmup) bertema *sci-fi* yang dikembangkan khusus untuk kompetisi **Game Jam GDGOC UNSRI 2026**. Pemain berperan sebagai pilot pesawat tempur luar aka-asa elit yang dikirim ke wilayah terpencil untuk menahan invasi armada UFO misterius yang mengancam jalur galaksi.
 
 ---
 
@@ -12,7 +12,7 @@
 
 Game ini dirancang dengan fokus pada fleksibilitas kontrol, visual yang dinamis, dan tantangan yang terus berkembang:
 
-* [cite_start]**Mekanisme Difficulty Scaling:** Tantangan permainan meningkat secara dinamis seiring bertambahnya skor pemain melalui pembagian sistem gelombang (*Wave*)[cite: 6]:
+**Mekanisme Difficulty Scaling:** Tantangan permainan meningkat secara dinamis seiring bertambahnya skor pemain melalui pembagian sistem gelombang (*Wave*):
     * **Wave 1 (Skor 0-200):** UFO standar bergerak konstan dengan kecepatan lambat.
     * **Wave 2 (Skor 201-500):** Muncul tipe UFO baru dengan pola gerakan zigzag (sinusoidal) dan menembakkan proyektil.
     * **Wave 3 (Skor > 500):** "Elite UFO" dengan ketahanan tinggi (3x hit) yang melacak posisi pesawat pemain (*homing*).
@@ -27,10 +27,10 @@ Game ini dirancang dengan fokus pada fleksibilitas kontrol, visual yang dinamis,
 ## 🎮 Kontrol Permainan
 
 ### Kontrol PC:
-* [cite_start]**Manuver Pesawat:** Tombol `W, A, S, D` atau `Tombol Panah`[cite: 12].
-* [cite_start]**Menembak Laser:** `Spasi` (Spacebar)[cite: 13].
+* **Manuver Pesawat:** Tombol `W, A, S, D` atau `Tombol Panah`.
+* **Menembak Laser:** `Spasi` (Spacebar).
 * **EMP Shockwave:** Tombol `E`.
-* [cite_start]**Sistem Fitur:** Tombol `P` untuk Jeda (Pause) dan `R` untuk Memulai Ulang (Restart)[cite: 16].
+* **Sistem Fitur:** Tombol `P` untuk Jeda (Pause) dan `R` untuk Memulai Ulang (Restart).
 
 ### Kontrol Mobile:
 * **Manuver & Tembak:** *Drag & slide* pada layar (Menembak otomatis / *Auto-fire*).
@@ -40,9 +40,9 @@ Game ini dirancang dengan fokus pada fleksibilitas kontrol, visual yang dinamis,
 
 ## 🛠️ Spesifikasi Teknis & Aset
 
-* [cite_start]**Engine & Logic:** HTML5 Canvas API, Vanilla JavaScript (ES6+), dan Tailwind CSS (untuk struktur UI/Layouting)[cite: 10, 31].
-* [cite_start]**Aset Visual:** Grafis bersumber dari *Space Origin Assets* (opengameart.org)[cite: 32].
-* [cite_start]**Aset Audio:** *Custom Sci-fi Blaster* & *Synth-wave BGM* (opengameart.org - Royalty Free)[cite: 33].
+* **Engine & Logic:** HTML5 Canvas API, Vanilla JavaScript (ES6+), dan Tailwind CSS (untuk struktur UI/Layouting).
+* **Aset Visual:** Grafis bersumber dari *Space Origin Assets* (opengameart.org).
+* **Aset Audio:** *Custom Sci-fi Blaster* & *Synth-wave BGM* (opengameart.org - Royalty Free).
 
 ---
 
