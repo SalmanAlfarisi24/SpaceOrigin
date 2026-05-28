@@ -62,8 +62,15 @@ Game ini dirancang dengan fokus pada fleksibilitas kontrol, visual yang dinamis,
 
 ---
 
+## 🚀 Preview Game
+
+https://space-origin-omega.vercel.app/
+
+---
+
 ## 📝 Lisensi
 
 Proyek ini dilisensikan di bawah **MIT License** - lihat file [LICENSE](LICENSE) untuk detail lebih lanjut.
 
 Developed with 🎮 by **Salman Al Farisi**
+
