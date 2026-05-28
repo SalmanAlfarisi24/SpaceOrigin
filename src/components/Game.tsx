@@ -3,11 +3,17 @@ import MobileControls from './MobileControls';
 
 interface GameProps {
   onGameOver: (score: number) => void;
+  isPaused: boolean;
 }
 
-export default function Game({ onGameOver }: GameProps) {
+export default function Game({ onGameOver, isPaused }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
+  const isPausedRef = useRef(isPaused);
+
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -274,7 +280,7 @@ export default function Game({ onGameOver }: GameProps) {
     }));
 
     const update = () => {
-      if (gameover) return;
+      if (gameover || isPausedRef.current) return;
 
       if (isDying) {
         deathTimer++;
@@ -729,6 +735,22 @@ export default function Game({ onGameOver }: GameProps) {
 
     const draw = () => {
       ctx.save();
+      
+      // Handle Pause Overlay Drawing
+      if (isPausedRef.current) {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(0, 0, width, height);
+        ctx.globalAlpha = 1;
+        
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 40px "Space Grotesk", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('PAUSED', width / 2, height / 2);
+        ctx.restore();
+        return;
+      }
+
       if (screenShake > 0) {
         ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
         screenShake *= 0.9;

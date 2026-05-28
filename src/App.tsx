@@ -8,11 +8,14 @@ import SplashScreen from './components/SplashScreen';
 import Dashboard from './components/Dashboard';
 import Game from './components/Game';
 import GameOver from './components/GameOver';
+import DeveloperInfo from './components/DeveloperInfo';
+import { HelpCircle } from 'lucide-react';
 
 type GameState = 'SPLASH' | 'MENU' | 'PLAYING' | 'GAMEOVER';
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>('SPLASH');
+  const [isDevInfoOpen, setIsDevInfoOpen] = useState(false);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const bgMusicRef = useRef<HTMLAudioElement | null>(null);
@@ -36,6 +39,16 @@ export default function App() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (bgMusicRef.current) {
+      if (isDevInfoOpen) {
+        bgMusicRef.current.pause();
+      } else if (gameState === 'PLAYING' || gameState === 'MENU') {
+        bgMusicRef.current.play().catch(() => {});
+      }
+    }
+  }, [isDevInfoOpen, gameState]);
 
   const startGame = () => {
     setGameState('PLAYING');
@@ -99,17 +112,35 @@ export default function App() {
       )}
 
       {gameState === 'PLAYING' && (
-        <Game onGameOver={handleGameOver} />
+        <Game onGameOver={handleGameOver} isPaused={isDevInfoOpen} />
       )}
 
       {gameState === 'GAMEOVER' && (
         <>
-          <Game onGameOver={() => {}} /> {/* Keep game in background but paused/static */}
+          <Game onGameOver={() => {}} isPaused={false} /> {/* Keep game in background but paused/static */}
           <GameOver 
             score={score} 
             highScore={highScore} 
             onRestart={restartGame} 
             onMainMenu={goToMenu} 
+          />
+        </>
+      )}
+
+      {/* Developer Info Button & Modal */}
+      {gameState !== 'SPLASH' && (
+        <>
+          <button
+            onClick={() => setIsDevInfoOpen(true)}
+            className="fixed top-4 right-4 z-[90] p-2 sm:p-3 bg-cyan-900/40 border border-cyan-500/30 rounded-full text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] active:scale-90"
+            title="Developer Info"
+          >
+            <HelpCircle size={20} className="sm:w-6 sm:h-6" />
+          </button>
+          
+          <DeveloperInfo 
+            isOpen={isDevInfoOpen} 
+            onClose={() => setIsDevInfoOpen(false)} 
           />
         </>
       )}
