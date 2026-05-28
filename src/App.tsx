@@ -16,6 +16,7 @@ export default function App() {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const bgMusicRef = useRef<HTMLAudioElement | null>(null);
+  const appContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Load high score
@@ -38,6 +39,22 @@ export default function App() {
 
   const startGame = () => {
     setGameState('PLAYING');
+
+    // Request Fullscreen on the app container to ensure immersive experience
+    const el = appContainerRef.current;
+    if (el) {
+      const requestFullscreen = el.requestFullscreen || 
+                                (el as any).webkitRequestFullscreen || 
+                                (el as any).mozRequestFullScreen || 
+                                (el as any).msRequestFullscreen;
+
+      if (requestFullscreen) {
+        requestFullscreen.call(el, { navigationUI: 'hide' }).catch((err: any) => {
+          console.warn(`Error attempting to enable full-screen mode: ${err.message}`);
+        });
+      }
+    }
+
     if (bgMusicRef.current) {
       bgMusicRef.current.play().catch(e => console.log("Music play blocked:", e));
     }
@@ -53,6 +70,17 @@ export default function App() {
   };
 
   const restartGame = () => {
+    // Ensure fullscreen is requested/maintained
+    const el = appContainerRef.current;
+    if (el && !document.fullscreenElement) {
+      const requestFullscreen = el.requestFullscreen || 
+                                (el as any).webkitRequestFullscreen || 
+                                (el as any).mozRequestFullScreen || 
+                                (el as any).msRequestFullscreen;
+      if (requestFullscreen) {
+        requestFullscreen.call(el, { navigationUI: 'hide' }).catch(() => {});
+      }
+    }
     setGameState('PLAYING');
   };
 
@@ -61,7 +89,7 @@ export default function App() {
   };
 
   return (
-    <div className="w-full h-screen bg-black text-white selection:bg-cyan-500 selection:text-white">
+    <div ref={appContainerRef} className="w-full h-screen bg-black text-white selection:bg-cyan-500 selection:text-white overflow-hidden">
       {gameState === 'SPLASH' && (
         <SplashScreen onComplete={() => setGameState('MENU')} />
       )}

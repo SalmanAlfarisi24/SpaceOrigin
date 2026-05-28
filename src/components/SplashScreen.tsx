@@ -51,7 +51,7 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         <img 
           src="assets/preview.png" 
           alt="Space Origin Logo" 
-          className="w-48 h-48 object-contain drop-shadow-[0_0_30px_rgba(0,255,255,0.5)]"
+          className="w-32 h-32 sm:w-48 sm:h-48 object-contain drop-shadow-[0_0_30px_rgba(0,255,255,0.5)]"
           referrerPolicy="no-referrer"
         />
       </motion.div>
@@ -61,12 +61,12 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 1, duration: 1 }}
-        className="mt-8 text-center z-10"
+        className="mt-6 sm:mt-8 text-center z-10"
       >
-        <h1 className="text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-cyan-400 to-blue-600 italic">
+        <h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-cyan-400 to-blue-600 italic">
           SPACE ORIGIN
         </h1>
-        <p className="text-cyan-500/60 font-mono tracking-[0.5em] text-sm mt-2 uppercase">
+        <p className="text-cyan-500/60 font-mono tracking-[0.3em] sm:tracking-[0.5em] text-xs sm:text-sm mt-2 uppercase">
           Retro Futuristic Odyssey
         </p>
       </motion.div>
