@@ -50,7 +50,7 @@ Game ini dirancang dengan fokus pada fleksibilitas kontrol, visual yang dinamis,
 
 1. **Clone Repositori:**
    ```bash
-   git clone [https://github.com/USERNAME_ANDA/space-origin.git](https://github.com/SalmanAlFarisi24/space-origin.git)
+   git clone https://github.com/SalmanAlfarisi24/SpaceOrigin.git
     ```
 2.  **Masuk ke Direktori Project:**
     ```bash
