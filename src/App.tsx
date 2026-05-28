@@ -127,23 +127,22 @@ export default function App() {
         </>
       )}
 
-      {/* Developer Info Button & Modal */}
-      {gameState !== 'SPLASH' && (
-        <>
-          <button
-            onClick={() => setIsDevInfoOpen(true)}
-            className="fixed top-4 right-4 z-[90] p-2 sm:p-3 bg-cyan-900/40 border border-cyan-500/30 rounded-full text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] active:scale-90"
-            title="Developer Info"
-          >
-            <HelpCircle size={20} className="sm:w-6 sm:h-6" />
-          </button>
-          
-          <DeveloperInfo 
-            isOpen={isDevInfoOpen} 
-            onClose={() => setIsDevInfoOpen(false)} 
-          />
-        </>
+      {/* Developer Info Button */}
+      {gameState === 'MENU' && (
+        <button
+          onClick={() => setIsDevInfoOpen(true)}
+          className="fixed top-4 right-4 z-[90] p-2 sm:p-3 bg-cyan-900/40 border border-cyan-500/30 rounded-full text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] active:scale-90"
+          title="Developer Info"
+        >
+          <HelpCircle size={20} className="sm:w-6 sm:h-6" />
+        </button>
       )}
+      
+      {/* Developer Info Modal */}
+      <DeveloperInfo 
+        isOpen={isDevInfoOpen} 
+        onClose={() => setIsDevInfoOpen(false)} 
+      />
     </div>
   );
 }
