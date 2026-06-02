@@ -138,7 +138,7 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
     alienImg.src = 'assets/alien.png';
 
     const bgImg = new Image();
-    bgImg.src = 'assets/gambar.jpg';
+    bgImg.src = 'assets/gambar.png';
 
     let bgX = 0;
     const bgSpeed = 2;
