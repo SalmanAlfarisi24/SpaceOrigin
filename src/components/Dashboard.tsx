@@ -33,7 +33,7 @@ export default function Dashboard({ onStart, highScore }: DashboardProps) {
       {/* Background Image with Blur */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="assets/gambar.jpg" 
+          src="assets/gambar.png" 
           alt="Space Background" 
           className="w-full h-full object-cover opacity-40 scale-110 blur-sm"
           referrerPolicy="no-referrer"

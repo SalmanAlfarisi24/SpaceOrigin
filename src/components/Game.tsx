@@ -11,6 +11,7 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
   const [internalPaused, setInternalPaused] = useState(false);
+  const [levelEntryFlash, setLevelEntryFlash] = useState(0);
   const isPausedRef = useRef(isPaused);
   const isInternalPausedRef = useRef(false);
 
@@ -185,12 +186,17 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
     // Mini Boss State
     let miniBoss: any = null;
     let lastBossScore = 0;
+    let bossSpawnTimer = 0;
+    let nextBossSpawnTime = Math.floor(Math.random() * 3600) + 3600; // Random between 60-120 seconds (60fps)
 
-    // --- New States for mechanics ---
-    // 1. Warp Drive
+    // 1. Warp Drive & Level Entry
     let warpActive = false;
     let warpTimer = 0;
     const WARP_DURATION = 180; // 3 seconds
+    
+    let levelEntryActive = false;
+    let levelEntryTimer = 0;
+    const LEVEL_ENTRY_DURATION = 90; // 1.5 seconds
     
     // 2. Drone Companion (Scrap)
     let scrapCount = 0;
@@ -335,6 +341,11 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
 
       if (gameover || isPausedRef.current || isInternalPausedRef.current) return;
 
+      // Increment Boss Spawn Timer if not already active
+      if (!miniBoss && !warpActive && !levelEntryActive) {
+        bossSpawnTimer++;
+      }
+
       if (isDying) {
         deathTimer++;
         screenShake = Math.random() * 10;
@@ -445,15 +456,15 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
         if (eb.x < -10) enemyBullets.splice(i, 1);
       });
 
-      // Boss Spawn Trigger (Every 500 points)
-      if (currentScore > 0 && currentScore % 500 === 0 && currentScore !== lastBossScore && !miniBoss) {
+      // Boss Spawn Trigger (Time-based: 60-120 seconds)
+      if (bossSpawnTimer >= nextBossSpawnTime && !miniBoss && !warpActive && !levelEntryActive) {
         miniBoss = {
           x: width + 200,
           y: height / 2,
           width: 180 * gameScale,
           height: 180 * gameScale,
-          hp: 20,
-          maxHp: 20,
+          hp: 30, // Increased HP for time-based challenge
+          maxHp: 30,
           speed: 1.5,
           shootTimer: 0,
           isCharging: false,
@@ -461,7 +472,9 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
           chargeTarget: { x: 0, y: 0 },
           phase: 0
         };
-        lastBossScore = currentScore;
+        bossSpawnTimer = 0;
+        // Hentikan musuh biasa agar fokus ke Bos
+        enemyTimer = -99999; 
       }
 
       // Spawning enemies (if no boss)
@@ -748,10 +761,38 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
         
         if (warpTimer <= 0) {
           warpActive = false;
-          // Reset player to left side for next wave
-          player.x = -100;
+          // Start Level Entry Sequence
+          levelEntryActive = true;
+          levelEntryTimer = LEVEL_ENTRY_DURATION;
+          setLevelEntryFlash(30);
+          player.x = 100;
+          player.y = height + 200; // Position below screen
+          nextBossSpawnTime = Math.floor(Math.random() * 3600) + 3600; // Reset next boss time
+          enemyTimer = 0; // Resume enemy spawning
         }
         return; // Skip rest of update during warp
+      }
+
+      // --- Level Entry Transition Logic ---
+      if (levelEntryActive) {
+        levelEntryTimer--;
+        
+        // Fly up from bottom to center left
+        const targetY = height / 2;
+        player.y += (targetY - player.y) * 0.08;
+        player.x = 100; // Keep fixed X during entry
+
+        // Visual effects during entry
+        if (levelEntryTimer % 5 === 0) {
+          createExplosion(player.x, player.y + 30, '#00ffff');
+        }
+        
+        setLevelEntryFlash(prev => Math.max(0, prev - 1));
+
+        if (levelEntryTimer <= 0) {
+          levelEntryActive = false;
+        }
+        return; // Lock controls during entry
       }
 
       // 1.1 Overdrive Logic (Trigger with Q key = 81)
@@ -1507,6 +1548,14 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
 
       {/* Mobile Controls */}
       <MobileControls />
+
+      {/* Level Entry Flash */}
+      {levelEntryFlash > 0 && (
+        <div 
+          className="fixed inset-0 bg-white pointer-events-none z-[160]"
+          style={{ opacity: levelEntryFlash / 30 }}
+        />
+      )}
     </div>
   );
 }
