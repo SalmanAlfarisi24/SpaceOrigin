@@ -138,7 +138,7 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
     alienImg.src = 'assets/alien.png';
 
     const bgImg = new Image();
-    bgImg.src = 'assets/gambar.png';
+    bgImg.src = 'assets/gambar.jpg';
 
     let bgX = 0;
     const bgSpeed = 2;
@@ -1317,10 +1317,19 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
       const isSmall = width < 640;
       ctx.textAlign = 'left';
       
-      // Score
+      // Score (Top Center - Number Only)
+      ctx.save();
+      ctx.textAlign = 'center';
       ctx.fillStyle = 'white';
-      ctx.font = `bold ${isSmall ? 16 : 24}px "Space Grotesk", sans-serif`;
-      ctx.fillText(`SCORE: ${currentScore}`, 20, isSmall ? 30 : 40);
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#00ffff';
+      ctx.font = 'bold 32px "Space Grotesk", sans-serif';
+      ctx.fillText(currentScore.toString(), width / 2, 40);
+      
+      ctx.font = 'bold 8px monospace';
+      ctx.fillStyle = 'rgba(0, 255, 255, 0.4)';
+      ctx.fillText("TAP TO PAUSE", width / 2, 55);
+      ctx.restore();
 
       // Player Health Bar
       const hpWidth = 150 * gameScale;
@@ -1447,6 +1456,13 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
     <div className="fixed inset-0 overflow-hidden bg-black">
       <canvas ref={canvasRef} className="block w-full h-full" />
       
+      {/* Clickable Score Area to Pause */}
+      <div 
+        onClick={() => setInternalPaused(true)}
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-16 cursor-pointer z-[150] group"
+        title="Click to Pause"
+      />
+
       {/* Desktop Hints */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/30 font-mono text-[10px] uppercase tracking-widest pointer-events-none hidden md:block">
         WASD to fly • SPACE to fire • E: EMP • Q: Overdrive • ESC: Pause
@@ -1457,18 +1473,18 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
         <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-[#0a0f1a] border border-cyan-500/30 p-8 rounded-2xl flex flex-col items-center gap-6 shadow-[0_0_50px_rgba(6,182,212,0.2)]">
             <h2 className="text-3xl font-black italic text-white tracking-widest">MISSION PAUSED</h2>
-            <div className="flex flex-col gap-3 w-48">
+            <div className="flex flex-col gap-3 w-56">
               <button 
                 onClick={() => setInternalPaused(false)}
-                className="w-full py-3 bg-cyan-500 text-black font-bold rounded-lg hover:bg-cyan-400 transition-all active:scale-95"
+                className="w-full py-3 bg-cyan-500 text-black font-bold rounded-lg hover:bg-cyan-400 transition-all active:scale-95 shadow-[0_0_15px_rgba(6,182,212,0.4)]"
               >
-                RESUME
+                RESUME MISSION
               </button>
               <button 
                 onClick={onQuit}
-                className="w-full py-3 bg-white/10 text-white font-bold rounded-lg hover:bg-white/20 transition-all active:scale-95 border border-white/20"
+                className="w-full py-3 bg-white/5 text-white font-bold rounded-lg hover:bg-white/10 transition-all active:scale-95 border border-white/10"
               >
-                QUIT MISSION
+                BACK TO MAIN MENU
               </button>
             </div>
             <p className="text-white/40 font-mono text-[10px] uppercase">Space Origin Systems Online</p>
