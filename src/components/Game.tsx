@@ -659,11 +659,11 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
               currentScore += 25 * combo * multiplier;
               setScore(currentScore);
               
-              // Wave Transition Trigger
-              if (currentScore % 250 === 0 && currentScore > 0 && !miniBoss) {
-                 warpActive = true;
-                 warpTimer = WARP_DURATION;
-              }
+              // Wave Transition Trigger (Removed - Warp now only for Boss)
+              // if (currentScore % 250 === 0 && currentScore > 0 && !miniBoss) {
+              //    warpActive = true;
+              //    warpTimer = WARP_DURATION;
+              // }
             }
           }
         });
@@ -671,8 +671,8 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
 
       // Player Collision with Enemy or Enemy Bullet
       const handlePlayerHit = () => {
-        // Invulnerable during Overdrive
-        if (overdrive.active) return;
+        // Invulnerable during Overdrive or Warp
+        if (overdrive.active || warpActive) return;
 
         // Reset Combo
         combo = 1;
@@ -733,14 +733,23 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
       // 1. Warp Drive Logic
       if (warpActive) {
         warpTimer--;
-        // Auto-move player to top-center
-        const targetX = width / 2 - player.width / 2;
-        const targetY = height / 4;
-        player.x += (targetX - player.x) * 0.1;
-        player.y += (targetY - player.y) * 0.1;
+        
+        // Lock player controls & propel forward
+        player.x += 15; // Rapidly propel forward
+        // Center vertically
+        player.y += (height / 2 - player.y) * 0.1;
+        
+        // Screen shake during warp
+        screenShake = 5;
+
+        // Clear existing enemies and bullets to avoid visual clutter during warp
+        enemies = [];
+        enemyBullets = [];
         
         if (warpTimer <= 0) {
           warpActive = false;
+          // Reset player to left side for next wave
+          player.x = -100;
         }
         return; // Skip rest of update during warp
       }
@@ -1203,18 +1212,27 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
         }
         ctx.restore();
 
-        // Boss Health Bar UI
+        // Boss Health Bar UI (Bottom Center)
         const barWidth = 400 * gameScale;
         const barHeight = 12 * gameScale;
         const bx = (width - barWidth) / 2;
-        const by = 40;
+        const by = height - 50;
         
         ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
         ctx.fillRect(bx, by, barWidth, barHeight);
         ctx.fillStyle = '#ff0055';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ff0055';
         ctx.fillRect(bx, by, (miniBoss.hp / miniBoss.maxHp) * barWidth, barHeight);
+        ctx.shadowBlur = 0;
         ctx.strokeStyle = 'white';
         ctx.strokeRect(bx, by, barWidth, barHeight);
+
+        // Boss Label (now above the bar at the bottom)
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText("ANOMALY DETECTED: MINI-BOSS", width / 2, by - 12);
 
         // Boss Telegraphing / Charging Visuals
         if (miniBoss.isCharging) {
@@ -1238,11 +1256,6 @@ export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
            ctx.arc(miniBoss.x - miniBoss.width / 3, miniBoss.y, 30 * chargeRatio, 0, Math.PI * 2);
            ctx.fill();
         }
-        
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 12px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText("ANOMALY DETECTED: MINI-BOSS", width / 2, by - 10);
       }
 
       enemies.forEach((enemy) => {

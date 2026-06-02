@@ -9,13 +9,15 @@ import Dashboard from './components/Dashboard';
 import Game from './components/Game';
 import GameOver from './components/GameOver';
 import DeveloperInfo from './components/DeveloperInfo';
-import { HelpCircle } from 'lucide-react';
+import TutorialModal from './components/TutorialModal';
+import { HelpCircle, Info } from 'lucide-react';
 
 type GameState = 'SPLASH' | 'MENU' | 'PLAYING' | 'GAMEOVER';
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState>('SPLASH');
   const [isDevInfoOpen, setIsDevInfoOpen] = useState(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
@@ -44,7 +46,7 @@ export default function App() {
   useEffect(() => {
     if (bgMusicRef.current) {
       bgMusicRef.current.muted = isMuted;
-      if (isDevInfoOpen) {
+      if (isDevInfoOpen || isTutorialOpen) {
         bgMusicRef.current.pause();
       } else if (gameState === 'PLAYING' || gameState === 'MENU') {
         bgMusicRef.current.play().catch(() => {});
@@ -113,8 +115,6 @@ export default function App() {
         <Dashboard 
           onStart={startGame} 
           highScore={highScore} 
-          isMuted={isMuted}
-          onToggleMute={() => setIsMuted(prev => !prev)}
         />
       )}
 
@@ -134,18 +134,35 @@ export default function App() {
         </>
       )}
 
-      {/* Developer Info Button */}
+      {/* Interactive Helper Buttons (Menu Only) */}
       {gameState === 'MENU' && (
-        <button
-          onClick={() => setIsDevInfoOpen(true)}
-          className="fixed top-4 right-4 z-[90] p-2 sm:p-3 bg-cyan-900/40 border border-cyan-500/30 rounded-full text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] active:scale-90"
-          title="Developer Info"
-        >
-          <HelpCircle size={20} className="sm:w-6 sm:h-6" />
-        </button>
+        <div className="fixed top-4 right-4 z-[90] flex flex-col gap-3">
+          {/* Tutorial Button (?) */}
+          <button
+            onClick={() => setIsTutorialOpen(true)}
+            className="p-2 sm:p-3 bg-cyan-900/40 border border-cyan-500/30 rounded-full text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] active:scale-90"
+            title="Gameplay Guide"
+          >
+            <HelpCircle size={20} className="sm:w-6 sm:h-6" />
+          </button>
+
+          {/* Developer Info Button (!) */}
+          <button
+            onClick={() => setIsDevInfoOpen(true)}
+            className="p-2 sm:p-3 bg-rose-900/40 border border-rose-500/30 rounded-full text-rose-400 hover:bg-rose-500 hover:text-black transition-all shadow-[0_0_15px_rgba(244,63,94,0.2)] active:scale-90"
+            title="Developer Info"
+          >
+            <Info size={20} className="sm:w-6 sm:h-6" />
+          </button>
+        </div>
       )}
       
-      {/* Developer Info Modal */}
+      {/* Modals */}
+      <TutorialModal 
+        isOpen={isTutorialOpen} 
+        onClose={() => setIsTutorialOpen(false)} 
+      />
+      
       <DeveloperInfo 
         isOpen={isDevInfoOpen} 
         onClose={() => setIsDevInfoOpen(false)} 

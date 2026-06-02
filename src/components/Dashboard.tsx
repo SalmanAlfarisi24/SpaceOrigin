@@ -1,12 +1,10 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Play, LogOut, Trophy, Volume2, VolumeX } from 'lucide-react';
+import { Play, LogOut, Trophy } from 'lucide-react';
 
 interface DashboardProps {
   onStart: () => void;
   highScore: number;
-  isMuted: boolean;
-  onToggleMute: () => void;
 }
 
 const containerVars = {
@@ -29,7 +27,7 @@ const itemVars = {
   }
 };
 
-export default function Dashboard({ onStart, highScore, isMuted, onToggleMute }: DashboardProps) {
+export default function Dashboard({ onStart, highScore }: DashboardProps) {
   return (
     <div className="fixed inset-0 bg-black flex flex-col items-center justify-center overflow-hidden">
       {/* Background Image with Blur */}
@@ -42,18 +40,6 @@ export default function Dashboard({ onStart, highScore, isMuted, onToggleMute }:
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black" />
       </div>
-
-      {/* Audio Toggle Button (Menu Only) */}
-      <motion.button
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1 }}
-        onClick={onToggleMute}
-        className="fixed top-20 right-4 z-[90] p-2 sm:p-3 bg-cyan-900/40 border border-cyan-500/30 rounded-full text-cyan-400 hover:bg-cyan-500 hover:text-black transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)] active:scale-90"
-        title={isMuted ? "Unmute" : "Mute"}
-      >
-        {isMuted ? <VolumeX size={20} className="sm:w-6 sm:h-6" /> : <Volume2 size={20} className="sm:w-6 sm:h-6" />}
-      </motion.button>
 
       {/* Content */}
       <motion.div 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, HelpCircle, ExternalLink, GraduationCap, User } from 'lucide-react';
+import { X, Info, ExternalLink, GraduationCap, User } from 'lucide-react';
 
 interface DeveloperInfoProps {
   isOpen: boolean;
@@ -34,8 +34,8 @@ export default function DeveloperInfo({ isOpen, onClose }: DeveloperInfoProps) {
             {/* Header */}
             <div className="flex items-center justify-between mb-8 relative">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
-                  <HelpCircle className="text-cyan-400 w-5 h-5" />
+                <div className="p-2 bg-rose-500/10 rounded-lg border border-rose-500/20">
+                  <Info className="text-rose-400 w-5 h-5" />
                 </div>
                 <h2 className="text-xl font-bold tracking-tight text-white font-sans">
                   INFORMASI PENGEMBANG
