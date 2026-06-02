@@ -16,6 +16,7 @@ type GameState = 'SPLASH' | 'MENU' | 'PLAYING' | 'GAMEOVER';
 export default function App() {
   const [gameState, setGameState] = useState<GameState>('SPLASH');
   const [isDevInfoOpen, setIsDevInfoOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const bgMusicRef = useRef<HTMLAudioElement | null>(null);
@@ -42,13 +43,14 @@ export default function App() {
 
   useEffect(() => {
     if (bgMusicRef.current) {
+      bgMusicRef.current.muted = isMuted;
       if (isDevInfoOpen) {
         bgMusicRef.current.pause();
       } else if (gameState === 'PLAYING' || gameState === 'MENU') {
         bgMusicRef.current.play().catch(() => {});
       }
     }
-  }, [isDevInfoOpen, gameState]);
+  }, [isDevInfoOpen, gameState, isMuted]);
 
   const startGame = () => {
     setGameState('PLAYING');
@@ -108,16 +110,21 @@ export default function App() {
       )}
 
       {gameState === 'MENU' && (
-        <Dashboard onStart={startGame} highScore={highScore} />
+        <Dashboard 
+          onStart={startGame} 
+          highScore={highScore} 
+          isMuted={isMuted}
+          onToggleMute={() => setIsMuted(prev => !prev)}
+        />
       )}
 
       {gameState === 'PLAYING' && (
-        <Game onGameOver={handleGameOver} isPaused={isDevInfoOpen} />
+        <Game onGameOver={handleGameOver} onQuit={goToMenu} isPaused={isDevInfoOpen} />
       )}
 
       {gameState === 'GAMEOVER' && (
         <>
-          <Game onGameOver={() => {}} isPaused={false} /> {/* Keep game in background but paused/static */}
+          <Game onGameOver={() => {}} onQuit={() => {}} isPaused={false} /> {/* Keep game in background but paused/static */}
           <GameOver 
             score={score} 
             highScore={highScore} 

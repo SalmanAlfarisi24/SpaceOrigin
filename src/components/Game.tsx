@@ -3,17 +3,24 @@ import MobileControls from './MobileControls';
 
 interface GameProps {
   onGameOver: (score: number) => void;
+  onQuit: () => void;
   isPaused: boolean;
 }
 
-export default function Game({ onGameOver, isPaused }: GameProps) {
+export default function Game({ onGameOver, onQuit, isPaused }: GameProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(0);
+  const [internalPaused, setInternalPaused] = useState(false);
   const isPausedRef = useRef(isPaused);
+  const isInternalPausedRef = useRef(false);
 
   useEffect(() => {
     isPausedRef.current = isPaused;
   }, [isPaused]);
+
+  useEffect(() => {
+    isInternalPausedRef.current = internalPaused;
+  }, [internalPaused]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -131,7 +138,7 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
     alienImg.src = 'assets/alien.png';
 
     const bgImg = new Image();
-    bgImg.src = 'assets/gambar.png';
+    bgImg.src = 'assets/gambar.jpg';
 
     let bgX = 0;
     const bgSpeed = 2;
@@ -185,7 +192,7 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
     let warpTimer = 0;
     const WARP_DURATION = 180; // 3 seconds
     
-    // 2. Drone Companion
+    // 2. Drone Companion (Scrap)
     let scrapCount = 0;
     let droneActive = false;
     let droneTimer = 0;
@@ -199,6 +206,36 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
     let combo = 1;
     let comboTimer = 0;
     const COMBO_DURATION = 90; // 1.5 seconds
+
+    // 5. Bounty & Risk-Reward
+    let bountyTimer = 0;
+    let bountyTarget: any = null;
+    let multiplier = 1;
+    let multiplierFlash = 0;
+
+    // 6. Performance Tracking
+    let lastTime = performance.now();
+    let frameTimes: number[] = [];
+    let fps = 60;
+    let latency = 20;
+
+    // 7. Emergency Repair Drone
+    let repairDrone = {
+      active: false,
+      timer: 0,
+      used: false,
+      healTick: 0,
+    };
+    const REPAIR_DRONE_DURATION = 600; // 10 seconds
+
+    // 8. Overdrive Blast
+    let overdrive = {
+      meter: 0, // 0 to 20 kills
+      active: false,
+      timer: 0,
+    };
+    const OVERDRIVE_DURATION = 300; // 5 seconds
+    const OVERDRIVE_KILL_REQ = 20;
 
     let currentScore = 0;
     let scraps: any[] = [];
@@ -280,7 +317,23 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
     }));
 
     const update = () => {
-      if (gameover || isPausedRef.current) return;
+      // Performance calculation
+      const now = performance.now();
+      const dt = now - lastTime;
+      lastTime = now;
+      frameTimes.push(dt);
+      if (frameTimes.length > 60) frameTimes.shift();
+      const avgFrameTime = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
+      fps = Math.round(1000 / avgFrameTime);
+      latency = Math.round(dt);
+
+      // Handle Pause Toggle
+      if (keys[27]) { // ESC
+        delete keys[27];
+        setInternalPaused(prev => !prev);
+      }
+
+      if (gameover || isPausedRef.current || isInternalPausedRef.current) return;
 
       if (isDying) {
         deathTimer++;
@@ -547,6 +600,10 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
             createExplosion(miniBoss.x, miniBoss.y, 'white');
             currentScore += 100 * combo;
             miniBoss = null;
+            // Overdrive meter increment
+            if (!overdrive.active) {
+              overdrive.meter = Math.min(OVERDRIVE_KILL_REQ, overdrive.meter + 5);
+            }
             // Trigger Warp Drive
             warpActive = true;
             warpTimer = WARP_DURATION;
@@ -562,6 +619,10 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
             createExplosion(bullet.x, bullet.y, '#ffaa00');
             if (enemy.hp <= 0) {
               playExplosionSound();
+              // Overdrive meter increment
+              if (!overdrive.active) {
+                overdrive.meter = Math.min(OVERDRIVE_KILL_REQ, overdrive.meter + 1);
+              }
               // Combo Logic
               combo++;
               comboTimer = COMBO_DURATION;
@@ -575,8 +636,27 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
               if (Math.random() < 0.15) {
                 powerUps.push({ x: enemy.x, y: enemy.y, width: 30 * gameScale, height: 30 * gameScale, pulse: 0 });
               }
+
+              // Bounty Reward
+              if (enemy.isBounty) {
+                currentScore += 500 * combo;
+                player.shieldHp = player.maxShieldHp; // Instant refill
+                playPowerupSound();
+                for (let k = 0; k < 20; k++) {
+                  particles.push({ 
+                    x: enemy.x, 
+                    y: enemy.y, 
+                    vx: (Math.random() - 0.5) * 20, 
+                    vy: (Math.random() - 0.5) * 20, 
+                    size: Math.random() * 8 + 4, 
+                    life: 50, 
+                    color: '#ef4444' 
+                  });
+                }
+              }
+
               enemies.splice(i, 1);
-              currentScore += 25 * combo;
+              currentScore += 25 * combo * multiplier;
               setScore(currentScore);
               
               // Wave Transition Trigger
@@ -591,6 +671,9 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
 
       // Player Collision with Enemy or Enemy Bullet
       const handlePlayerHit = () => {
+        // Invulnerable during Overdrive
+        if (overdrive.active) return;
+
         // Reset Combo
         combo = 1;
         comboTimer = 0;
@@ -662,6 +745,70 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
         return; // Skip rest of update during warp
       }
 
+      // 1.1 Overdrive Logic (Trigger with Q key = 81)
+      if (keys[81] && overdrive.meter >= OVERDRIVE_KILL_REQ && !overdrive.active) {
+        overdrive.active = true;
+        overdrive.timer = OVERDRIVE_DURATION;
+        overdrive.meter = 0;
+        playPowerupSound();
+        screenShake = 15;
+      }
+
+      if (overdrive.active) {
+        overdrive.timer--;
+        if (overdrive.timer <= 0) {
+          overdrive.active = false;
+        }
+        // Hyper fire rate
+        if (shootCounter % Math.floor(player.shootingSpeed / 3) === 0 && (keys[32] || isMobileShooting)) {
+          playLaser();
+          bullets.push({ x: player.x + player.width / 2, y: player.y, width: 25, height: 6, speed: 18, color: '#f87171' });
+        }
+      }
+
+      // 1.2 Emergency Repair Drone Logic
+      if (player.hp < player.maxHp * 0.25 && !repairDrone.used && !repairDrone.active && !isDying) {
+        repairDrone.active = true;
+        repairDrone.timer = REPAIR_DRONE_DURATION;
+        repairDrone.used = true;
+        repairDrone.healTick = 0;
+        playPowerupSound();
+      }
+
+      if (repairDrone.active) {
+        repairDrone.timer--;
+        repairDrone.healTick++;
+        
+        // Restore 5% HP/Shield every 2 seconds (120 frames)
+        if (repairDrone.healTick >= 120) {
+          player.hp = Math.min(player.maxHp, player.hp + player.maxHp * 0.05);
+          player.shieldHp = Math.min(player.maxShieldHp, player.shieldHp + player.maxShieldHp * 0.05);
+          repairDrone.healTick = 0;
+          createExplosion(player.x, player.y, '#4ade80');
+        }
+
+        // Protective Shooting at nearby projectiles
+        enemyBullets.forEach(eb => {
+          const dx = eb.x - player.x;
+          const dy = eb.y - player.y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 200 && repairDrone.timer % 60 === 0) {
+             bullets.push({ 
+               x: player.x, 
+               y: player.y, 
+               vx: eb.x - player.x, 
+               vy: eb.y - player.y,
+               speed: 10,
+               width: 8, 
+               height: 3, 
+               isRepairDroneBullet: true 
+             });
+          }
+        });
+
+        if (repairDrone.timer <= 0) repairDrone.active = false;
+      }
+
       // 2. Combo Timer
       if (comboTimer > 0) {
         comboTimer--;
@@ -731,22 +878,87 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
           playPowerupSound();
         }
       });
+
+      // 6. Risk-Reward Multiplier Calculation
+      let isRisking = player.x > width * 0.7;
+      
+      // Near Miss Check
+      enemyBullets.forEach(eb => {
+        const dx = eb.x - player.x;
+        const dy = eb.y - player.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < player.width + 30 && dist > player.width / 2) {
+           isRisking = true;
+        }
+      });
+      enemies.forEach(e => {
+        const dx = e.x - player.x;
+        const dy = e.y - player.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < player.width + 50 && dist > player.width / 2) {
+           isRisking = true;
+        }
+      });
+
+      if (isRisking) {
+        if (multiplier === 1) multiplierFlash = 30;
+        multiplier = 2;
+      } else {
+        multiplier = 1;
+      }
+      if (multiplierFlash > 0) multiplierFlash--;
+
+      // 7. Bounty System Logic
+      bountyTimer++;
+      if (bountyTimer > 1800) { // Every 30 seconds
+        const potentialTargets = enemies.filter(e => !e.isBounty);
+        if (potentialTargets.length > 0) {
+          const target = potentialTargets[Math.floor(Math.random() * potentialTargets.length)];
+          target.isBounty = true;
+          target.bountyTimeLeft = 300; // 5 seconds
+          bountyTimer = 0;
+        }
+      }
+
+      enemies.forEach((enemy, i) => {
+        if (enemy.isBounty) {
+          enemy.bountyTimeLeft--;
+          if (enemy.bountyTimeLeft <= 0) {
+            // Failure: Shoot fast bullets and leave
+            for (let k = 0; k < 5; k++) {
+              enemyBullets.push({
+                x: enemy.x,
+                y: enemy.y,
+                vx: -10,
+                vy: (Math.random() - 0.5) * 10,
+                speed: 10,
+                width: 10,
+                height: 10,
+                stunTimer: 0
+              });
+            }
+            enemy.isBounty = false;
+            enemy.speed = 15; // Escape speed
+          }
+        }
+      });
     };
 
     const draw = () => {
       ctx.save();
       
       // Handle Pause Overlay Drawing
-      if (isPausedRef.current) {
+      if (isPausedRef.current || isInternalPausedRef.current) {
         ctx.globalAlpha = 0.5;
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.fillRect(0, 0, width, height);
         ctx.globalAlpha = 1;
         
+        // We handle UI buttons in the React return part for better click handling
         ctx.fillStyle = 'white';
         ctx.font = 'bold 40px "Space Grotesk", sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('PAUSED', width / 2, height / 2);
+        ctx.fillText('PAUSED', width / 2, height / 2 - 40);
         ctx.restore();
         return;
       }
@@ -792,6 +1004,16 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
       });
       ctx.globalAlpha = 1;
 
+      // Performance Overlay (Top Left)
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.fillRect(10, 10, 80, 40);
+      ctx.fillStyle = fps < 30 ? '#ef4444' : '#22c55e';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`FPS: ${fps}`, 15, 25);
+      ctx.fillStyle = '#60a5fa';
+      ctx.fillText(`LAT: ${latency}ms`, 15, 40);
+
       // Draw EMP Shockwaves
       empShockwaves.forEach(sw => {
         ctx.save();
@@ -804,10 +1026,19 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
       });
 
       bullets.forEach((bullet) => {
-        ctx.fillStyle = (bullet as any).isDroneBullet ? '#fbbf24' : '#00ffff';
+        ctx.fillStyle = (bullet as any).isDroneBullet ? '#fbbf24' : ((bullet as any).isRepairDroneBullet ? '#4ade80' : '#00ffff');
+        if (overdrive.active) ctx.fillStyle = '#f87171';
         ctx.shadowBlur = 10;
         ctx.shadowColor = ctx.fillStyle;
-        ctx.fillRect(bullet.x, bullet.y - bullet.height / 2, bullet.width, bullet.height);
+        if ((bullet as any).vx) {
+           ctx.beginPath();
+           ctx.arc(bullet.x, bullet.y, bullet.width/2, 0, Math.PI * 2);
+           ctx.fill();
+           bullet.x += (bullet as any).vx;
+           bullet.y += (bullet as any).vy;
+        } else {
+           ctx.fillRect(bullet.x, bullet.y - bullet.height / 2, bullet.width, bullet.height);
+        }
         ctx.shadowBlur = 0;
       });
 
@@ -840,16 +1071,22 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
           ctx.save();
           ctx.translate(player.x + player.width / 2, player.y);
           ctx.rotate(Math.PI / 2);
+          if (overdrive.active) {
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = '#f87171';
+            ctx.globalAlpha = 0.8 + Math.sin(Date.now() / 50) * 0.2;
+          }
+
           ctx.drawImage(shipImg, -player.width / 2, -player.height / 2, player.width, player.height);
           
           // Shield Visual Effect
-          if (buffTimers.shield > 0) {
-            ctx.strokeStyle = '#60a5fa';
+          if (buffTimers.shield > 0 || overdrive.active) {
+            ctx.strokeStyle = overdrive.active ? '#f87171' : '#60a5fa';
             ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.arc(0, 0, player.width * 0.8, 0, Math.PI * 2);
             ctx.stroke();
-            ctx.fillStyle = 'rgba(96, 165, 250, 0.2)';
+            ctx.fillStyle = overdrive.active ? 'rgba(248, 113, 113, 0.2)' : 'rgba(96, 165, 250, 0.2)';
             ctx.fill();
           }
           ctx.restore();
@@ -889,6 +1126,21 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
         // Eye
         ctx.fillStyle = 'red';
         ctx.fillRect(2, -2, 4, 4);
+        ctx.restore();
+      }
+
+      // Draw Repair Drone
+      if (repairDrone.active) {
+        ctx.save();
+        ctx.translate(player.x - 30, player.y - 40);
+        ctx.fillStyle = '#4ade80';
+        ctx.beginPath();
+        ctx.arc(Math.sin(Date.now() / 150) * 15, Math.cos(Date.now() / 150) * 8, 10, 0, Math.PI * 2);
+        ctx.fill();
+        // Cross
+        ctx.fillStyle = 'white';
+        ctx.fillRect(-2, -5, 4, 10);
+        ctx.fillRect(-5, -2, 10, 4);
         ctx.restore();
       }
 
@@ -1014,6 +1266,25 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
           ctx.fill();
         }
         
+        // Bounty Indicator (Red Flashing)
+        if (enemy.isBounty) {
+          const flash = Math.sin(Date.now() / 50) > 0;
+          ctx.strokeStyle = flash ? '#ef4444' : 'white';
+          ctx.lineWidth = 4;
+          ctx.strokeRect(enemy.x - enemy.width / 2 - 5, enemy.y - enemy.height / 2 - 5, enemy.width + 10, enemy.height + 10);
+          
+          // Timer circle
+          ctx.beginPath();
+          ctx.strokeStyle = '#ef4444';
+          ctx.arc(enemy.x, enemy.y, enemy.width, -Math.PI / 2, -Math.PI / 2 + (enemy.bountyTimeLeft / 300) * Math.PI * 2);
+          ctx.stroke();
+          
+          ctx.fillStyle = '#ef4444';
+          ctx.font = 'bold 12px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText("BOUNTY", enemy.x, enemy.y - enemy.height - 10);
+        }
+        
         // Stun indicator for enemies
         if (enemy.stunTimer > 0) {
            ctx.strokeStyle = '#60a5fa';
@@ -1079,6 +1350,19 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
       // Active Buffs
       let buffY = isSmall ? 90 : 115;
       
+      // Multiplier Indicator
+      if (multiplier > 1 || multiplierFlash > 0) {
+        ctx.save();
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = 'bold 24px "Space Grotesk"';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#fbbf24';
+        const pulse = 1 + Math.sin(Date.now() / 100) * 0.1;
+        ctx.scale(pulse, pulse);
+        ctx.fillText("X2 MULTIPLIER", (player.x + 40) / pulse, (player.y - 40) / pulse);
+        ctx.restore();
+      }
+      
       // Combo Text
       if (combo > 1) {
         ctx.save();
@@ -1108,6 +1392,15 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
         ctx.font = 'bold 10px monospace';
         ctx.fillText("EMP READY [E]", width - 120, 65);
       }
+
+      // Overdrive Meter
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.fillRect(width - 120, 80, 100, 10);
+      const overdriveColor = overdrive.meter >= OVERDRIVE_KILL_REQ ? (Math.sin(Date.now() / 100) > 0 ? '#f87171' : 'white') : '#f87171';
+      ctx.fillStyle = overdriveColor;
+      ctx.fillRect(width - 120, 80, (overdrive.meter / OVERDRIVE_KILL_REQ) * 100, 10);
+      ctx.font = 'bold 8px monospace';
+      ctx.fillText(overdrive.active ? "OVERDRIVE ACTIVE!" : (overdrive.meter >= OVERDRIVE_KILL_REQ ? "OVERDRIVE READY [Q]" : "OVERDRIVE METER"), width - 120, 105);
 
       Object.entries(buffTimers).forEach(([name, time]) => {
         if (time > 0) {
@@ -1156,8 +1449,32 @@ export default function Game({ onGameOver, isPaused }: GameProps) {
       
       {/* Desktop Hints */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/30 font-mono text-[10px] uppercase tracking-widest pointer-events-none hidden md:block">
-        WASD to fly • SPACE to fire
+        WASD to fly • SPACE to fire • E: EMP • Q: Overdrive • ESC: Pause
       </div>
+
+      {/* Internal Pause Overlay */}
+      {internalPaused && (
+        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-[#0a0f1a] border border-cyan-500/30 p-8 rounded-2xl flex flex-col items-center gap-6 shadow-[0_0_50px_rgba(6,182,212,0.2)]">
+            <h2 className="text-3xl font-black italic text-white tracking-widest">MISSION PAUSED</h2>
+            <div className="flex flex-col gap-3 w-48">
+              <button 
+                onClick={() => setInternalPaused(false)}
+                className="w-full py-3 bg-cyan-500 text-black font-bold rounded-lg hover:bg-cyan-400 transition-all active:scale-95"
+              >
+                RESUME
+              </button>
+              <button 
+                onClick={onQuit}
+                className="w-full py-3 bg-white/10 text-white font-bold rounded-lg hover:bg-white/20 transition-all active:scale-95 border border-white/20"
+              >
+                QUIT MISSION
+              </button>
+            </div>
+            <p className="text-white/40 font-mono text-[10px] uppercase">Space Origin Systems Online</p>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Controls */}
       <MobileControls />
