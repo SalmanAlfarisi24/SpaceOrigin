@@ -58,7 +58,7 @@ export default function DeveloperInfo({ isOpen, onClose }: DeveloperInfoProps) {
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-white/40 font-mono mb-1 block">Developer Name</label>
-                    <p className="text-white font-medium text-lg italic">Salman Al Farisi</p>
+                    <p className="text-white font-medium text-lg italic">3IT_TECH</p>
                   </div>
                 </div>
 
