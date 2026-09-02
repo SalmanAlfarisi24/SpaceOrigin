@@ -1,4 +1,4 @@
-# 🚀 Space Origin: Galactic Strike
+# 🚀 Space Origin: Galactic Strike 
 
 ![Game Status](https://img.shields.io/badge/Project-Game%20Jam%20Submission-blue?style=for-the-badge)
 ![Tech Stack](https://img.shields.io/badge/Made%20with-HTML5%20%7C%20CSS3%20%7C%20JavaScript-blue?style=for-the-badge)
